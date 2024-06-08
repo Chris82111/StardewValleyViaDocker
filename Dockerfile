@@ -133,8 +133,20 @@ RUN dotnet --info > /dev/null 2>&1 ; if [ "0" != "$?" ] ; then exit 1 ; fi
 ### StardewValley
 #------------------------------------------------------------------------------
 
+EXPOSE 24642/udp
+
+# Mount point: `--mount type=bind,source="$(pwd)"/game_saves,target=/root/.config/StardewValley/Saves`
+ENV STARDEW_VALLEY_SAVES_PATH="/root/.config/StardewValley/Saves"
+VOLUME ["${STARDEW_VALLEY_SAVES_PATH}"]
+
+
+#------------------------------------------------------------------------------
+
 RUN apt update && apt install -y \
   unzip
+
+
+#------------------------------------------------------------------------------
 
 WORKDIR "/game/download"
 
@@ -146,9 +158,13 @@ RUN unzip "/game/download/stardew_valley_1_6_8_24119_6732702600_72964.sh" -d "/g
 
 Add stardew_valley.desktop /game/stardew_valley/stardew_valley.desktop
 RUN chmod +x /game/stardew_valley/stardew_valley.desktop && \
+# Menu symbol
   ln /game/stardew_valley/stardew_valley.desktop /usr/share/applications/ && \
+# Desktop symbol
   mkdir -p /root/Desktop/ && \
-  ln /game/stardew_valley/stardew_valley.desktop /root/Desktop/
+  ln /game/stardew_valley/stardew_valley.desktop /root/Desktop/ && \
+# Autostart
+  ln /game/stardew_valley/stardew_valley.desktop /etc/xdg/autostart/ 
 
 
 #------------------------------------------------------------------------------
