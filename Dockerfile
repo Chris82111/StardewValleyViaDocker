@@ -107,6 +107,35 @@ ENV healthVnc='vncserver -list | grep ":1" > /dev/null ; if [ "0" != "$?" ] ; th
 
 
 #------------------------------------------------------------------------------
+### .Net
+#------------------------------------------------------------------------------
+
+# ASP.NET Core 6.0 Runtime (v6.0.30) - Linux x64 Binaries
+
+WORKDIR "/usr/share/dotnet"
+
+ADD --checksum=sha256:f03fdd09e114028a3e4751d7504280cbf1264ca72bf69aa87bc8489348b46e64 \
+  https://download.visualstudio.microsoft.com/download/pr/c8c7ccb6-b0f8-4448-a542-ed153838cac3/f104b5cc6c11109c0b48e2bb8f5b6cef/aspnetcore-runtime-6.0.31-linux-x64.tar.gz \
+  dotnet.tar.gz
+
+#ADD --checksum=sha256:da88d9e7f8eb0129e9d2ac8b4ff70fe0df5b7a536684121c3d37466a66c61032 \
+#  https://download.visualstudio.microsoft.com/download/pr/d4b71fac-a2fd-4516-ac58-100fb09d796a/e79d6c2a8040b59bf49c0d167ae70a7b/dotnet-sdk-5.0.408-linux-arm64.tar.gz \
+#  dotnet.tar.gz
+#
+##RUN wget -qO dotnet.tar.gz https://download.visualstudio.microsoft.com/download/pr/d4b71fac-a2fd-4516-ac58-100fb09d796a/e79d6c2a8040b59bf49c0d167ae70a7b/dotnet-sdk-5.0.408-linux-arm64.tar.gz &&
+
+RUN mkdir -p /usr/share/dotnet && \
+  tar -zxf dotnet.tar.gz -C /usr/share/dotnet &&\
+  rm dotnet.tar.gz &&\
+  ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet
+
+ENV DOTNET_ROOT=/usr/bin/dotnet
+ENV PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
+
+RUN dotnet --info > /dev/null 2>&1 ; if [ "0" != "$?" ] ; then exit 1 ; fi
+
+
+#------------------------------------------------------------------------------
 ###
 #------------------------------------------------------------------------------
 
