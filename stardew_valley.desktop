@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Icon=/game/stardew_valley/data/noarch/support/icon.png
+Name=Stardew Valley
+Comment=Start Stardew Valley
+Categories=Game;
+Exec=/game/stardew_valley/data/noarch/start.sh
+StartupNotify=true
+Terminal=false

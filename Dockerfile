@@ -118,12 +118,6 @@ ADD --checksum=sha256:f03fdd09e114028a3e4751d7504280cbf1264ca72bf69aa87bc8489348
   https://download.visualstudio.microsoft.com/download/pr/c8c7ccb6-b0f8-4448-a542-ed153838cac3/f104b5cc6c11109c0b48e2bb8f5b6cef/aspnetcore-runtime-6.0.31-linux-x64.tar.gz \
   dotnet.tar.gz
 
-#ADD --checksum=sha256:da88d9e7f8eb0129e9d2ac8b4ff70fe0df5b7a536684121c3d37466a66c61032 \
-#  https://download.visualstudio.microsoft.com/download/pr/d4b71fac-a2fd-4516-ac58-100fb09d796a/e79d6c2a8040b59bf49c0d167ae70a7b/dotnet-sdk-5.0.408-linux-arm64.tar.gz \
-#  dotnet.tar.gz
-#
-##RUN wget -qO dotnet.tar.gz https://download.visualstudio.microsoft.com/download/pr/d4b71fac-a2fd-4516-ac58-100fb09d796a/e79d6c2a8040b59bf49c0d167ae70a7b/dotnet-sdk-5.0.408-linux-arm64.tar.gz &&
-
 RUN mkdir -p /usr/share/dotnet && \
   tar -zxf dotnet.tar.gz -C /usr/share/dotnet &&\
   rm dotnet.tar.gz &&\
@@ -133,6 +127,28 @@ ENV DOTNET_ROOT=/usr/bin/dotnet
 ENV PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
 
 RUN dotnet --info > /dev/null 2>&1 ; if [ "0" != "$?" ] ; then exit 1 ; fi
+
+
+#------------------------------------------------------------------------------
+### StardewValley
+#------------------------------------------------------------------------------
+
+RUN apt update && apt install -y \
+  unzip
+
+WORKDIR "/game/download"
+
+ADD stardew_valley_1_6_8_24119_6732702600_72964.sh .
+
+WORKDIR "/game"
+
+RUN unzip "/game/download/stardew_valley_1_6_8_24119_6732702600_72964.sh" -d "/game/stardew_valley" || exit 0
+
+Add stardew_valley.desktop /game/stardew_valley/stardew_valley.desktop
+RUN chmod +x /game/stardew_valley/stardew_valley.desktop && \
+  ln /game/stardew_valley/stardew_valley.desktop /usr/share/applications/ && \
+  mkdir -p /root/Desktop/ && \
+  ln /game/stardew_valley/stardew_valley.desktop /root/Desktop/
 
 
 #------------------------------------------------------------------------------
