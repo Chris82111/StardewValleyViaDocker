@@ -107,6 +107,152 @@ ENV healthVnc='vncserver -list | grep ":1" > /dev/null ; if [ "0" != "$?" ] ; th
 
 
 #------------------------------------------------------------------------------
+### .Net
+#------------------------------------------------------------------------------
+
+# ASP.NET Core 6.0 Runtime (v6.0.30) - Linux x64 Binaries
+
+WORKDIR "/usr/share/dotnet"
+
+ADD --checksum=sha256:f03fdd09e114028a3e4751d7504280cbf1264ca72bf69aa87bc8489348b46e64 \
+  https://download.visualstudio.microsoft.com/download/pr/c8c7ccb6-b0f8-4448-a542-ed153838cac3/f104b5cc6c11109c0b48e2bb8f5b6cef/aspnetcore-runtime-6.0.31-linux-x64.tar.gz \
+  dotnet.tar.gz
+
+RUN mkdir -p /usr/share/dotnet && \
+  tar -zxf dotnet.tar.gz -C /usr/share/dotnet &&\
+  rm dotnet.tar.gz &&\
+  ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet
+
+ENV DOTNET_ROOT=/usr/bin/dotnet
+ENV PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
+
+RUN dotnet --info > /dev/null 2>&1 ; if [ "0" != "$?" ] ; then exit 1 ; fi
+
+
+#------------------------------------------------------------------------------
+### StardewValley
+#------------------------------------------------------------------------------
+
+EXPOSE 24642/udp
+
+# Mount point: `--mount type=bind,source="$(pwd)"/game_saves,target=/root/.config/StardewValley/Saves`
+ENV STARDEW_VALLEY_SAVES_PATH="/root/.config/StardewValley/Saves"
+VOLUME ["${STARDEW_VALLEY_SAVES_PATH}"]
+
+# Mount point: `--mount type=bind,source=c:/temp/game_mods,target=/game/stardew_valley/data/noarch/game/Mods`
+ENV STARDEW_VALLEY_MODS_PATH="/game/stardew_valley/data/noarch/game/Mods"
+VOLUME ["${STARDEW_VALLEY_MODS_PATH}"]
+
+
+#------------------------------------------------------------------------------
+
+RUN apt update && apt install -y \
+  unzip
+
+
+#------------------------------------------------------------------------------
+
+WORKDIR "/game/download"
+
+ENV STARDEW_VALLEY_SH="/game/download/stardew_valley.sh"
+
+ADD stardew_valley_1_6_8_24119_6732702600_72964.sh "${STARDEW_VALLEY_SH}"
+
+ENV STARDEW_VALLEY_PATH="/game/stardew_valley"
+
+RUN unzip "${STARDEW_VALLEY_SH}" -d "${STARDEW_VALLEY_PATH}" ; \
+  rm "${STARDEW_VALLEY_SH}"
+
+ENV STARDEW_VALLEY_ICON_NAME="stardew_valley.desktop"
+
+Add "${STARDEW_VALLEY_ICON_NAME}" "${STARDEW_VALLEY_PATH}/${STARDEW_VALLEY_ICON_NAME}"
+RUN chmod +x "${STARDEW_VALLEY_PATH}/${STARDEW_VALLEY_ICON_NAME}" && \
+# Menu symbol
+  ln "${STARDEW_VALLEY_PATH}/${STARDEW_VALLEY_ICON_NAME}" "/usr/share/applications/" && \
+# Desktop symbol
+  mkdir -p /root/Desktop/ && \
+  ln "${STARDEW_VALLEY_PATH}/${STARDEW_VALLEY_ICON_NAME}" "/root/Desktop/" && \
+# Autostart
+  ln "${STARDEW_VALLEY_PATH}/${STARDEW_VALLEY_ICON_NAME}" "/etc/xdg/autostart/" 
+
+
+#------------------------------------------------------------------------------
+
+WORKDIR "/game/download"
+
+ENV SMAPI_ZIP="/game/download/SMAPI.zip"
+
+ADD --checksum=sha256:6a2299e6b5b8c396d1a48dca6ff19f01773b51211de66e97ac659dd3687f56f8 \
+  https://github.com/Pathoschild/SMAPI/releases/download/4.0.8/SMAPI-4.0.8-installer.zip \
+  "${SMAPI_ZIP}"
+
+ENV SMAPI_PATH="/game/download/smapi"
+
+RUN OUT="${SMAPI_PATH}" && \
+  unzip "${SMAPI_ZIP}" -d "${OUT}" && \
+  rm "${SMAPI_ZIP}" && \
+  NO="$(ls -1q ${OUT} | wc -l)" && \
+  if [ "1" = "$NO" ] ; then \
+    NAME="$(ls -1q ${OUT})" && \
+    mv "${OUT}/${NAME}/"* "${OUT}" && \
+    rmdir "${OUT}/${NAME}" ; \
+  fi
+
+# SMAPI, manual install 1
+RUN mv "${SMAPI_PATH}/internal/linux/install.dat" "${SMAPI_PATH}/internal/linux/install.zip"
+
+ENV SMAPI_INTERNAL_PATH="/game/download/smapi_internal"
+
+RUN unzip "${SMAPI_PATH}/internal/linux/install.zip" -d "${SMAPI_INTERNAL_PATH}" && \
+  rm -rf "${SMAPI_PATH}"
+
+ENV STARDEW_VALLEY_GAME_PATH="${STARDEW_VALLEY_PATH}/data/noarch/game"
+
+# SMAPI, manual install 2
+RUN mv "${SMAPI_INTERNAL_PATH}/"* "${STARDEW_VALLEY_GAME_PATH}" && \
+  rmdir "${SMAPI_INTERNAL_PATH}"
+
+# SMAPI, manual install 3
+RUN cp "${STARDEW_VALLEY_GAME_PATH}/Stardew Valley.deps.json" "${STARDEW_VALLEY_GAME_PATH}/StardewModdingAPI.deps.json" 
+
+# SMAPI, manual install 4
+RUN mv "${STARDEW_VALLEY_GAME_PATH}/StardewValley" "${STARDEW_VALLEY_GAME_PATH}/StardewValley-original"
+
+RUN mv "${STARDEW_VALLEY_GAME_PATH}/StardewModdingAPI" "${STARDEW_VALLEY_GAME_PATH}/StardewValley" 
+
+
+#------------------------------------------------------------------------------
+
+WORKDIR "/game/download"
+
+ENV DEDICATED_SERVER_ZIP="/game/download/DedicatedServer.zip"
+
+ADD --checksum=sha256:88bb3f5ad6a0afd4b7e9d691152cdb706070c2418562bb6f92cb92970485486d \
+  https://github.com/Chris82111/SMAPIDedicatedServerMod/releases/download/v1.1.0-beta/DedicatedServer.1.1.0.zip \
+  "${DEDICATED_SERVER_ZIP}"
+
+ENV DEDICATED_SERVER_PATH="/game/download/dedicated_server"
+
+RUN OUT="${DEDICATED_SERVER_PATH}" && \
+  unzip "${DEDICATED_SERVER_ZIP}" -d "${OUT}" && \
+  rm "${DEDICATED_SERVER_ZIP}" && \
+  NO="$(ls -1q ${OUT} | wc -l)" && \
+  if [ "1" = "$NO" ] ; then \
+    NAME="$(ls -1q ${OUT})" && \
+    mv "${OUT}/${NAME}/"* "${OUT}" && \
+    rmdir "${OUT}/${NAME}" ; \
+  fi
+  
+RUN mv "${DEDICATED_SERVER_PATH}"* "${STARDEW_VALLEY_GAME_PATH}/Mods/DedicatedServer"
+
+RUN \
+  mv "${STARDEW_VALLEY_GAME_PATH}/Mods" "${STARDEW_VALLEY_GAME_PATH}/ModsCopy" && \
+  mkdir -p "${STARDEW_VALLEY_GAME_PATH}/Mods"
+  
+ENV startCopyModsContent="cp -an \"${STARDEW_VALLEY_GAME_PATH}/ModsCopy/.\" \"${STARDEW_VALLEY_GAME_PATH}/Mods\""
+
+
+#------------------------------------------------------------------------------
 ###
 #------------------------------------------------------------------------------
 
@@ -156,6 +302,7 @@ ENV startBehavior='\
 # --> insert start
 # eval $startExample && \
   eval $startSsh && \
+  eval $startCopyModsContent && \
   eval $startVnc && \
 # <-- end start
   echo -e $textApplicationStarted || \
