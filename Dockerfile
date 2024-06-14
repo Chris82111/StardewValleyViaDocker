@@ -139,6 +139,10 @@ EXPOSE 24642/udp
 ENV STARDEW_VALLEY_SAVES_PATH="/root/.config/StardewValley/Saves"
 VOLUME ["${STARDEW_VALLEY_SAVES_PATH}"]
 
+# Mount point: `--mount type=bind,source=c:/temp/game_mods,target=/game/stardew_valley/data/noarch/game/Mods`
+ENV STARDEW_VALLEY_MODS_PATH="/game/stardew_valley/data/noarch/game/Mods"
+VOLUME ["${STARDEW_VALLEY_MODS_PATH}"]
+
 
 #------------------------------------------------------------------------------
 
@@ -202,7 +206,7 @@ ENV SMAPI_INTERNAL_PATH="/game/download/smapi_internal"
 RUN unzip "${SMAPI_PATH}/internal/linux/install.zip" -d "${SMAPI_INTERNAL_PATH}" && \
   rm -rf "${SMAPI_PATH}"
 
-ENV STARDEW_VALLEY_GAME_PATH="${STARDEW_VALLEY_PATH}/data/noarch/game/"
+ENV STARDEW_VALLEY_GAME_PATH="${STARDEW_VALLEY_PATH}/data/noarch/game"
 
 # SMAPI, manual install 2
 RUN mv "${SMAPI_INTERNAL_PATH}/"* "${STARDEW_VALLEY_GAME_PATH}" && \
@@ -223,10 +227,6 @@ WORKDIR "/game/download"
 
 ENV DEDICATED_SERVER_ZIP="/game/download/DedicatedServer.zip"
 
-#ADD --checksum=sha256:33fe506f8f8c8020305baa6a17a35a9d9afb7aa1685ad7f8b5ba87b4e909936c \
-#  https://github.com/Chris82111/SMAPIDedicatedServerMod/releases/download/v1.0.2-beta2/DedicatedServer.1.0.2.beta2.zip \
-#  "${DEDICATED_SERVER_ZIP}"
-
 ADD --checksum=sha256:88bb3f5ad6a0afd4b7e9d691152cdb706070c2418562bb6f92cb92970485486d \
   https://github.com/Chris82111/SMAPIDedicatedServerMod/releases/download/v1.1.0-beta/DedicatedServer.1.1.0.zip \
   "${DEDICATED_SERVER_ZIP}"
@@ -244,6 +244,12 @@ RUN OUT="${DEDICATED_SERVER_PATH}" && \
   fi
   
 RUN mv "${DEDICATED_SERVER_PATH}"* "${STARDEW_VALLEY_GAME_PATH}/Mods/DedicatedServer"
+
+RUN \
+  mv "${STARDEW_VALLEY_GAME_PATH}/Mods" "${STARDEW_VALLEY_GAME_PATH}/ModsCopy" && \
+  mkdir -p "${STARDEW_VALLEY_GAME_PATH}/Mods"
+  
+ENV startCopyModsContent="cp -an \"${STARDEW_VALLEY_GAME_PATH}/ModsCopy/.\" \"${STARDEW_VALLEY_GAME_PATH}/Mods\""
 
 
 #------------------------------------------------------------------------------
@@ -296,6 +302,7 @@ ENV startBehavior='\
 # --> insert start
 # eval $startExample && \
   eval $startSsh && \
+  eval $startCopyModsContent && \
   eval $startVnc && \
 # <-- end start
   echo -e $textApplicationStarted || \
