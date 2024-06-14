@@ -218,6 +218,35 @@ RUN mv "${STARDEW_VALLEY_GAME_PATH}/StardewModdingAPI" "${STARDEW_VALLEY_GAME_PA
 
 
 #------------------------------------------------------------------------------
+
+WORKDIR "/game/download"
+
+ENV DEDICATED_SERVER_ZIP="/game/download/DedicatedServer.zip"
+
+#ADD --checksum=sha256:33fe506f8f8c8020305baa6a17a35a9d9afb7aa1685ad7f8b5ba87b4e909936c \
+#  https://github.com/Chris82111/SMAPIDedicatedServerMod/releases/download/v1.0.2-beta2/DedicatedServer.1.0.2.beta2.zip \
+#  "${DEDICATED_SERVER_ZIP}"
+
+ADD --checksum=sha256:88bb3f5ad6a0afd4b7e9d691152cdb706070c2418562bb6f92cb92970485486d \
+  https://github.com/Chris82111/SMAPIDedicatedServerMod/releases/download/v1.1.0-beta/DedicatedServer.1.1.0.zip \
+  "${DEDICATED_SERVER_ZIP}"
+
+ENV DEDICATED_SERVER_PATH="/game/download/dedicated_server"
+
+RUN OUT="${DEDICATED_SERVER_PATH}" && \
+  unzip "${DEDICATED_SERVER_ZIP}" -d "${OUT}" && \
+  rm "${DEDICATED_SERVER_ZIP}" && \
+  NO="$(ls -1q ${OUT} | wc -l)" && \
+  if [ "1" = "$NO" ] ; then \
+    NAME="$(ls -1q ${OUT})" && \
+    mv "${OUT}/${NAME}/"* "${OUT}" && \
+    rmdir "${OUT}/${NAME}" ; \
+  fi
+  
+RUN mv "${DEDICATED_SERVER_PATH}"* "${STARDEW_VALLEY_GAME_PATH}/Mods/DedicatedServer"
+
+
+#------------------------------------------------------------------------------
 ###
 #------------------------------------------------------------------------------
 
