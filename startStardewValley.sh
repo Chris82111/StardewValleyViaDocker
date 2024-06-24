@@ -52,14 +52,12 @@ echo "Copy      : Mod files"
 cp -an "${STARDEW_VALLEY_GAME_PATH}/ModsCopy/." "${STARDEW_VALLEY_GAME_PATH}/Mods"
 
 if [ "true" == "$(eval ${evalUseGui})" ] ; then
-  # GUI 550 % to 600 % of my CPU
   echo "Start     : with GUI"
   export DISPLAY=:1
   xdg-open "${STARDEW_VALLEY_PATH}/${STARDEW_VALLEY_ICON_NAME}" & PID_SW=$!
   # Nice to know, an autostart can be realized by a desktop icon file in the autostart directory.
   # ln "${STARDEW_VALLEY_PATH}/${STARDEW_VALLEY_ICON_NAME}" "/etc/xdg/autostart/" 
 else
-  # Without GUI 140 % but VNC is running, 130 % without VNC
   echo "Start     : without GUI"
   rm -f "${STARDEW_VALLEY_PATH}/stdin.pipe"
   mkfifo "${STARDEW_VALLEY_PATH}/stdin.pipe"

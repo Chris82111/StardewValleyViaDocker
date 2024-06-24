@@ -291,6 +291,64 @@ RUN \
 
 
 #------------------------------------------------------------------------------
+### wireguard
+#------------------------------------------------------------------------------
+  
+# Ports application is listening on: `-p 51820:51820/udp`
+ENV SERVER_PORT=51820
+EXPOSE ${SERVER_PORT}/udp
+
+# Mount point: `--mount type=bind,source="$(pwd)"/wireguard_certificates,target=/wireguard/certificates`
+ENV WIREGUARD_CERTIFICATES_PATH="/wireguard/certificates"
+VOLUME ["${WIREGUARD_CERTIFICATES_PATH}"]
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN \
+  apt update && \
+  apt -y upgrade && \
+  apt -y install \
+  wireguard \
+  net-tools \
+  iproute2
+  
+# Example webserver, is accessable with the `WIREGUARD_IP:80`
+#RUN \
+#  apt update && \
+#  apt -y upgrade && \
+#  apt -y install \
+#  nginx
+
+
+#------------------------------------------------------------------------------
+
+ENV WIREGUARD_PATH="/wireguard"
+WORKDIR "${WIREGUARD_PATH}"
+
+ENV WIREGUARD_SERVER_CERTIFICATES_PATH="${WIREGUARD_PATH}/server_certificates"
+
+# Enter the server's IP address:
+ENV SERVER_ENDPOINT=127.0.0.1
+
+ENV INTERFACE="wg0"
+
+ENV SERVER_IP=10.8.0.1
+ENV SERVER_IP_PREFIX=24
+
+ENV CLIENT_IP=10.8.0
+ENV CLIENT_IP_PREFIX=24
+
+ENV CLINET_COUNT_KEYS=20
+
+ADD initWireguard.sh .
+RUN chmod +x initWireguard.sh 
+
+ENV startWireguard="${WIREGUARD_PATH}/initWireguard.sh"
+
+ENV healthCheckWireguard="/usr/bin/wg show ${INTERFACE} 2>/dev/null | /bin/grep -q interface || exit 1"
+
+
+#------------------------------------------------------------------------------
 ###
 #------------------------------------------------------------------------------
 
@@ -323,7 +381,8 @@ WORKDIR "/app"
 #HEALTHCHECK NONE
 HEALTHCHECK --interval=30s --timeout=1s --retries=1 --start-period=0 CMD /bin/sh -c "\
 # --> insert health check
-	eval $healthVnc \
+	eval $healthVnc && \
+	eval $healthCheckWireguard \
 # <-- end health check
   "
 
@@ -339,6 +398,7 @@ ENV startBehavior='\
   trap "${sigTermHandler}" TERM && \
 # --> insert start
   eval $startConfig && \
+  eval $startWireguard && \
   eval $startSsh && \
   eval $startVnc && \
   eval $startStardewValley && \
