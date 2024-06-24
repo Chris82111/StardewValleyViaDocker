@@ -13,6 +13,11 @@ ENV FALSE="0"
 
 # Creates a start configuration file whose data can be changed.
 
+RUN \
+  apt update && apt -y upgrade && \
+# To change the config file
+  apt install -y vim
+
 # Mount point: `--mount type=bind,source="$(pwd)"/config,target=/config`
 ENV CONFIG_DIR="/config"
 VOLUME ["${CONFIG_DIR}"]
