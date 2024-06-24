@@ -7,6 +7,31 @@ STOPSIGNAL SIGTERM
 ENV TRUE="1"
 ENV FALSE="0"
 
+#------------------------------------------------------------------------------
+### Create config file
+#------------------------------------------------------------------------------
+
+# Creates a start configuration file whose data can be changed.
+
+RUN \
+  apt update && apt -y upgrade && \
+# To change the config file
+  apt install -y vim
+
+# Mount point: `--mount type=bind,source="$(pwd)"/config,target=/config`
+ENV CONFIG_DIR="/config"
+VOLUME ["${CONFIG_DIR}"]
+
+ENV evalUseGui="jq -r \" .useGui \" ${CONFIG_DIR}/docker.json"
+ENV startConfig="cp -an \"/configCopy/.\" \"/config\""
+
+WORKDIR "/configCopy"
+COPY <<EOF "/configCopy/docker.json"
+{
+  "useGui": false
+}
+EOF
+
 
 #------------------------------------------------------------------------------
 ### vnc and novnc
@@ -147,33 +172,48 @@ VOLUME ["${STARDEW_VALLEY_MODS_PATH}"]
 #------------------------------------------------------------------------------
 
 RUN apt update && apt install -y \
-  unzip
-
+  unzip \
+# Start GUI from cmd
+  xdg-utils \
+# Without GUI  
+  xvfb \
+# For Json files
+  jq
 
 #------------------------------------------------------------------------------
 
 WORKDIR "/game/download"
 
 ENV STARDEW_VALLEY_SH="/game/download/stardew_valley.sh"
+ENV STARDEW_VALLEY_PATH="/game/stardew_valley"
 
 ADD stardew_valley_1_6_8_24119_6732702600_72964.sh "${STARDEW_VALLEY_SH}"
 
-ENV STARDEW_VALLEY_PATH="/game/stardew_valley"
-
+# Unzip
 RUN unzip "${STARDEW_VALLEY_SH}" -d "${STARDEW_VALLEY_PATH}" ; \
   rm "${STARDEW_VALLEY_SH}"
 
 ENV STARDEW_VALLEY_ICON_NAME="stardew_valley.desktop"
 
-Add "${STARDEW_VALLEY_ICON_NAME}" "${STARDEW_VALLEY_PATH}/${STARDEW_VALLEY_ICON_NAME}"
-RUN chmod +x "${STARDEW_VALLEY_PATH}/${STARDEW_VALLEY_ICON_NAME}" && \
+ADD "${STARDEW_VALLEY_ICON_NAME}" "${STARDEW_VALLEY_PATH}/${STARDEW_VALLEY_ICON_NAME}"
+RUN \
+# Assigning rights
+  chmod +x "${STARDEW_VALLEY_PATH}/${STARDEW_VALLEY_ICON_NAME}" && \
 # Menu symbol
   ln "${STARDEW_VALLEY_PATH}/${STARDEW_VALLEY_ICON_NAME}" "/usr/share/applications/" && \
 # Desktop symbol
   mkdir -p /root/Desktop/ && \
-  ln "${STARDEW_VALLEY_PATH}/${STARDEW_VALLEY_ICON_NAME}" "/root/Desktop/" && \
-# Autostart
-  ln "${STARDEW_VALLEY_PATH}/${STARDEW_VALLEY_ICON_NAME}" "/etc/xdg/autostart/" 
+  ln "${STARDEW_VALLEY_PATH}/${STARDEW_VALLEY_ICON_NAME}" "/root/Desktop/"
+
+
+#------------------------------------------------------------------------------
+
+WORKDIR "${STARDEW_VALLEY_PATH}"
+
+ADD startStardewValley.sh .
+RUN chmod +x startStardewValley.sh
+
+ENV startStardewValley="${STARDEW_VALLEY_PATH}/startStardewValley.sh"
 
 
 #------------------------------------------------------------------------------
@@ -181,13 +221,13 @@ RUN chmod +x "${STARDEW_VALLEY_PATH}/${STARDEW_VALLEY_ICON_NAME}" && \
 WORKDIR "/game/download"
 
 ENV SMAPI_ZIP="/game/download/SMAPI.zip"
+ENV SMAPI_PATH="/game/download/smapi"
 
 ADD --checksum=sha256:6a2299e6b5b8c396d1a48dca6ff19f01773b51211de66e97ac659dd3687f56f8 \
   https://github.com/Pathoschild/SMAPI/releases/download/4.0.8/SMAPI-4.0.8-installer.zip \
   "${SMAPI_ZIP}"
 
-ENV SMAPI_PATH="/game/download/smapi"
-
+# Unzip
 RUN OUT="${SMAPI_PATH}" && \
   unzip "${SMAPI_ZIP}" -d "${OUT}" && \
   rm "${SMAPI_ZIP}" && \
@@ -226,13 +266,13 @@ RUN mv "${STARDEW_VALLEY_GAME_PATH}/StardewModdingAPI" "${STARDEW_VALLEY_GAME_PA
 WORKDIR "/game/download"
 
 ENV DEDICATED_SERVER_ZIP="/game/download/DedicatedServer.zip"
+ENV DEDICATED_SERVER_PATH="/game/download/dedicated_server"
 
 ADD --checksum=sha256:88bb3f5ad6a0afd4b7e9d691152cdb706070c2418562bb6f92cb92970485486d \
   https://github.com/Chris82111/SMAPIDedicatedServerMod/releases/download/v1.1.0-beta/DedicatedServer.1.1.0.zip \
   "${DEDICATED_SERVER_ZIP}"
 
-ENV DEDICATED_SERVER_PATH="/game/download/dedicated_server"
-
+# Unzip
 RUN OUT="${DEDICATED_SERVER_PATH}" && \
   unzip "${DEDICATED_SERVER_ZIP}" -d "${OUT}" && \
   rm "${DEDICATED_SERVER_ZIP}" && \
@@ -248,8 +288,6 @@ RUN mv "${DEDICATED_SERVER_PATH}"* "${STARDEW_VALLEY_GAME_PATH}/Mods/DedicatedSe
 RUN \
   mv "${STARDEW_VALLEY_GAME_PATH}/Mods" "${STARDEW_VALLEY_GAME_PATH}/ModsCopy" && \
   mkdir -p "${STARDEW_VALLEY_GAME_PATH}/Mods"
-  
-ENV startCopyModsContent="cp -an \"${STARDEW_VALLEY_GAME_PATH}/ModsCopy/.\" \"${STARDEW_VALLEY_GAME_PATH}/Mods\""
 
 
 #------------------------------------------------------------------------------
@@ -300,10 +338,10 @@ ENV sigTermHandler='\
 ENV startBehavior='\
   trap "${sigTermHandler}" TERM && \
 # --> insert start
-# eval $startExample && \
+  eval $startConfig && \
   eval $startSsh && \
-  eval $startCopyModsContent && \
   eval $startVnc && \
+  eval $startStardewValley && \
 # <-- end start
   echo -e $textApplicationStarted || \
   { echo -e $textApplicationNotStarted ; exit 1 ; } ; \

@@ -99,6 +99,16 @@ else
 fi
 
 
+#------------------------------------------------------------------------------
+if [ "true" != "$(eval ${evalUseGui})" ] ; then
+  echo "[$PASS] Use without GUI"
+  echo "${magenta}VNC_START:${standout} skipped"
+  echo "${magenta}NOVPN_START:${standout} skipped"
+  exit 0
+fi
+#------------------------------------------------------------------------------
+
+
 echo "${magenta}VNC_START:${standout}"
 
 # Use command `tigervncserver` or use `vncserver` the same way
