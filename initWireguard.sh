@@ -18,7 +18,7 @@
 #CLIENT_IP=10.8.0
 #CLIENT_IP_PREFIX=24
 #
-#CLINET_COUNT_KEYS=
+
 
 SERVER_DIR="${WIREGUARD_SERVER_CERTIFICATES_PATH}"
 CLIENT_DIR="${WIREGUARD_CERTIFICATES_PATH}"
@@ -34,6 +34,8 @@ CLIENT_PUBLIC="${CLIENT_DIR}/public"
 CLINET_KEY_EXTENSION="key"
 CLIENT_CONFIG="${CLIENT_DIR}/${INTERFACE}"
 CLIENT_CONFIG_EXTENSION="conf"
+CLINET_COUNT_KEYS="$(eval ${evalWireguardClients})"
+
 
 # -----------------------------------------------------------------------------
 #   Colors, ANSI escape codes

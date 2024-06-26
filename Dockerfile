@@ -23,12 +23,16 @@ ENV CONFIG_DIR="/config"
 VOLUME ["${CONFIG_DIR}"]
 
 ENV evalUseGui="jq -r \" .useGui \" ${CONFIG_DIR}/docker.json"
+ENV evalWireguardClients="jq -r \" .wireguard.clients \" ${CONFIG_DIR}/docker.json"
 ENV startConfig="cp -an \"/configCopy/.\" \"/config\""
 
 WORKDIR "/configCopy"
 COPY <<EOF "/configCopy/docker.json"
 {
-  "useGui": false
+  "useGui": false,
+  "wireguard": {
+    "clients": 4
+  }
 }
 EOF
 
@@ -337,8 +341,6 @@ ENV SERVER_IP_PREFIX=24
 
 ENV CLIENT_IP=10.8.0
 ENV CLIENT_IP_PREFIX=24
-
-ENV CLINET_COUNT_KEYS=20
 
 ADD initWireguard.sh .
 RUN chmod +x initWireguard.sh 
