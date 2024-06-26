@@ -27,14 +27,7 @@ ENV evalWireguardClients="jq -r \" .wireguard.clients \" ${CONFIG_DIR}/docker.js
 ENV startConfig="cp -an \"/configCopy/.\" \"/config\""
 
 WORKDIR "/configCopy"
-COPY <<EOF "/configCopy/docker.json"
-{
-  "useGui": false,
-  "wireguard": {
-    "clients": 4
-  }
-}
-EOF
+ADD docker.json .
 
 
 #------------------------------------------------------------------------------

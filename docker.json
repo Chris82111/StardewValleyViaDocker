@@ -1,0 +1,6 @@
+{
+  "useGui": false,
+  "wireguard": {
+    "clients": 4
+  }
+}
