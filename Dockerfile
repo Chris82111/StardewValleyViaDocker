@@ -292,8 +292,9 @@ RUN \
 #------------------------------------------------------------------------------
   
 # Ports application is listening on: `-p 51820:51820/udp`
-ENV SERVER_PORT=51820
-EXPOSE ${SERVER_PORT}/udp
+ENV SERVER_PORT_INTERNAL=51820
+ENV SERVER_PORT=${SERVER_PORT_INTERNAL}
+EXPOSE ${SERVER_PORT_INTERNAL}/udp
 
 # Mount point: `--mount type=bind,source="$(pwd)"/wireguard,target=/wireguard/certificates`
 ENV WIREGUARD_CERTIFICATES_PATH="/wireguard/certificates"
@@ -321,8 +322,6 @@ RUN \
 
 ENV WIREGUARD_PATH="/wireguard"
 WORKDIR "${WIREGUARD_PATH}"
-
-ENV WIREGUARD_SERVER_CERTIFICATES_PATH="${WIREGUARD_PATH}/server_certificates"
 
 # Enter the server's IP address:
 ENV SERVER_ENDPOINT=127.0.0.1
