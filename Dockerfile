@@ -157,11 +157,11 @@ RUN dotnet --info > /dev/null 2>&1 ; if [ "0" != "$?" ] ; then exit 1 ; fi
 
 EXPOSE 24642/udp
 
-# Mount point: `--mount type=bind,source="$(pwd)"/game_saves,target=/root/.config/StardewValley/Saves`
+# Mount point: `--mount type=bind,source="$(pwd)"/saves,target=/root/.config/StardewValley/Saves`
 ENV STARDEW_VALLEY_SAVES_PATH="/root/.config/StardewValley/Saves"
 VOLUME ["${STARDEW_VALLEY_SAVES_PATH}"]
 
-# Mount point: `--mount type=bind,source=c:/temp/game_mods,target=/game/stardew_valley/data/noarch/game/Mods`
+# Mount point: `--mount type=bind,source="$(pwd)"/mods,target=/game/stardew_valley/data/noarch/game/Mods`
 ENV STARDEW_VALLEY_MODS_PATH="/game/stardew_valley/data/noarch/game/Mods"
 VOLUME ["${STARDEW_VALLEY_MODS_PATH}"]
 
@@ -292,10 +292,11 @@ RUN \
 #------------------------------------------------------------------------------
   
 # Ports application is listening on: `-p 51820:51820/udp`
-ENV SERVER_PORT=51820
-EXPOSE ${SERVER_PORT}/udp
+ENV SERVER_PORT_INTERNAL=51820
+ENV SERVER_PORT=${SERVER_PORT_INTERNAL}
+EXPOSE ${SERVER_PORT_INTERNAL}/udp
 
-# Mount point: `--mount type=bind,source="$(pwd)"/wireguard_certificates,target=/wireguard/certificates`
+# Mount point: `--mount type=bind,source="$(pwd)"/wireguard,target=/wireguard/certificates`
 ENV WIREGUARD_CERTIFICATES_PATH="/wireguard/certificates"
 VOLUME ["${WIREGUARD_CERTIFICATES_PATH}"]
 
@@ -322,8 +323,6 @@ RUN \
 ENV WIREGUARD_PATH="/wireguard"
 WORKDIR "${WIREGUARD_PATH}"
 
-ENV WIREGUARD_SERVER_CERTIFICATES_PATH="${WIREGUARD_PATH}/server_certificates"
-
 # Enter the server's IP address:
 ENV SERVER_ENDPOINT=127.0.0.1
 
@@ -335,10 +334,10 @@ ENV SERVER_IP_PREFIX=24
 ENV CLIENT_IP=10.8.0
 ENV CLIENT_IP_PREFIX=24
 
-ADD initWireguard.sh .
-RUN chmod +x initWireguard.sh 
+ADD startWireGuard.sh .
+RUN chmod +x startWireGuard.sh 
 
-ENV startWireguard="${WIREGUARD_PATH}/initWireguard.sh"
+ENV startWireguard="${WIREGUARD_PATH}/startWireGuard.sh"
 
 ENV healthCheckWireguard="/usr/bin/wg show ${INTERFACE} 2>/dev/null | /bin/grep -q interface || exit 1"
 

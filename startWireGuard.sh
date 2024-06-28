@@ -5,12 +5,12 @@
 #------------------------------------------------------------------------------
 
 # Defined in Dockerfile
-#WIREGUARD_SERVER_CERTIFICATES_PATH
 #WIREGUARD_CERTIFICATES_PATH
 #
 #INTERFACE="wg0"
 #SERVER_ENDPOINT=127.0.0.1
 #SERVER_PORT=51820
+#SERVER_PORT_INTERNAL=51820
 #
 #SERVER_IP=10.8.0.1
 #SERVER_IP_PREFIX=24
@@ -20,12 +20,15 @@
 #
 
 
-SERVER_DIR="${WIREGUARD_SERVER_CERTIFICATES_PATH}"
+SERVER_DIR="${WIREGUARD_CERTIFICATES_PATH}"
 CLIENT_DIR="${WIREGUARD_CERTIFICATES_PATH}"
 
 SERVER_PRIVATE_KEY="${SERVER_DIR}/private.key"
 SERVER_PUBLIC_KEY="${SERVER_DIR}/public.key"
 SERVER_CONFIG="${SERVER_DIR}/${INTERFACE}.conf"
+
+SERVER_ENDPOINT_IP_FILE="${SERVER_DIR}/server_endpoint.ip"
+SERVER_ENDPOINT_PORT_FILE="${SERVER_DIR}/server_endpoint.port"
 
 PRESHARED_KEY="${SERVER_DIR}/presharedkey.key"
 
@@ -143,6 +146,26 @@ for (( i=1; i<=${CLINET_COUNT_KEYS}; i++ )) ; do
 done
 
 
+#------------------------------------------------------------------------------
+# Check whether the server endpoint ip and port is changed
+
+echo "SERVER_PORT          : ${SERVER_PORT}"
+echo "SERVER_PORT_INTERNAL : ${SERVER_PORT_INTERNAL}"
+echo "SERVER_ENDPOINT      : ${SERVER_ENDPOINT}"
+
+OLD_SERVER_ENDPOINT_IP="$(cat ${SERVER_ENDPOINT_IP_FILE})"
+if [ "${OLD_SERVER_ENDPOINT_IP}" != "${SERVER_ENDPOINT}" ]; then
+  RENEW_CONFIG="${TRUE}"
+fi
+echo "${SERVER_ENDPOINT}" > "${SERVER_ENDPOINT_IP_FILE}"
+
+OLD_SERVER_ENDPOINT_PORT="$(cat ${SERVER_ENDPOINT_PORT_FILE})"
+if [ "${OLD_SERVER_ENDPOINT_PORT}" != "${SERVER_PORT}" ]; then
+  RENEW_CONFIG="${TRUE}"
+fi
+echo "${SERVER_PORT}" > "${SERVER_ENDPOINT_PORT_FILE}"
+
+
 if [ "${RENEW_CONFIG}" = "$TRUE" ]; then
 
   #----------------------------------------------------------------------------
@@ -151,7 +174,7 @@ if [ "${RENEW_CONFIG}" = "$TRUE" ]; then
   touch "${SERVER_CONFIG}"
   echo "[Interface]" >> "${SERVER_CONFIG}"
   echo "Address = ${SERVER_IP}/${SERVER_IP_PREFIX}" >> "${SERVER_CONFIG}"
-  echo "ListenPort = ${SERVER_PORT}" >> "${SERVER_CONFIG}"
+  echo "ListenPort = ${SERVER_PORT_INTERNAL}" >> "${SERVER_CONFIG}"
   echo "PrivateKey = $(cat ${SERVER_PRIVATE_KEY})" >> "${SERVER_CONFIG}"
 
   for (( i=1; i<=${CLINET_COUNT_KEYS}; i++ )) ; do
@@ -223,7 +246,7 @@ TEST_PORT=$(wg show "${INTERFACE}" | grep 'listening port:' | sed 's/^.*: //')
 
 echo "${magenta}WIREGUARD_TESTS:${standout}"
 
-if [ "${SERVER_PORT}" = "${TEST_PORT}" ]; then
+if [ "${SERVER_PORT_INTERNAL}" = "${TEST_PORT}" ]; then
   echo "[$PASS] wireguard uses the port you have specified?"
 else
   echo "[$FAIL] wireguard uses the port you have specified?"
