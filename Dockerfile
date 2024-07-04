@@ -265,8 +265,8 @@ WORKDIR "/game/download"
 ENV DEDICATED_SERVER_ZIP="/game/download/DedicatedServer.zip"
 ENV DEDICATED_SERVER_PATH="/game/download/dedicated_server"
 
-ADD --checksum=sha256:88bb3f5ad6a0afd4b7e9d691152cdb706070c2418562bb6f92cb92970485486d \
-  https://github.com/Chris82111/SMAPIDedicatedServerMod/releases/download/v1.1.0-beta/DedicatedServer.1.1.0.zip \
+ADD --checksum=sha256:36a023833a18ad2b2c1e0493d77e1dcbff087419195333fdf5224c1bc4c9b98c \
+  https://github.com/Chris82111/SMAPIDedicatedServerMod/releases/download/v1.1.1-beta/DedicatedServer.1.1.1.zip \
   "${DEDICATED_SERVER_ZIP}"
 
 # Unzip
