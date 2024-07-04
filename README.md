@@ -125,7 +125,7 @@ To use TigerVNC or noVNC, proceed as follows:
 > Note the CPU load: \
 > 550 % ± 50 % with GUI \
 > 135 % ±  5 % without GUI \
-> One solution may be to use `--cpus=1`, this should work, but try it yourself.
+> One solution may be to use `--cpus=1.5`, this should work, but try it yourself.
 
 ## Directories
 
