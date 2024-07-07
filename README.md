@@ -2,7 +2,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Version-1.6.8-blue" />
-   <a href="https://github.com/Chris82111/SMAPIDedicatedServerMod/releases/tag/v1.1.1-beta"><img src="https://img.shields.io/badge/Mod-v1.1.1--beta-blue"/></a>
+   <a href="https://github.com/Chris82111/SMAPIDedicatedServerMod/releases/tag/v1.1.2-beta"><img src="https://img.shields.io/badge/Mod-v1.1.2--beta-blue"/></a>
 </p>
 
 With this repository you can run Stardew Valley as a multiplayer server in a Docker container. [Stardew Valley](https://www.gog.com/de/game/stardew_valley), [SMAPI](https://smapi.io/), the multiplayer mod [SMAPIDedicatedServerMod](https://github.com/ObjectManagerManager/SMAPIDedicatedServerMod) and all server applications are installed automatically. The server is hidden behind a VPN connection. Each client must connect to the server with [WireGuard](https://www.wireguard.com/). In the directory `wireguard` you will find the necessary WireGuard certificates. After someone is connected, it is possible to use Stardew Valley ([GOG](https://www.gog.com/de/game/stardew_valley), [Steam](https://store.steampowered.com/app/413150/Stardew_Valley/)), [TigerVNC](https://tigervnc.org/) and [noVNC](https://novnc.com/info.html). To use the applications on the server, you must run WireGuard VPN and connect with the internal VPN IP address `10.8.0.1` and the correct port. With the connection you can only access the container, you cannot access anything on the server or on the Internet.
